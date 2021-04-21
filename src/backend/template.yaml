@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  snabba-cash
+
+  Sample SAM Template for snabba-cash
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 300
+
+Resources:
+  GenPresignLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: genPresign/
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref IngestBucket
+      Events:
+        API:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /getpresign
+            Method: get
+      Policies:
+        - Statement:
+          - Sid: GenPresignPermission
+            Effect: Allow
+            Action:
+              - s3:*
+            Resource: !Sub 'arn:aws:s3:::${IngestBucket}/*'
+
+  ProcessImgLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: processImg/
+      Handler: app.lambdaHandler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          S3_BUCKET_INGEST: !Ref IngestBucket
+          S3_BUCKET_RESULT: !Ref ResultBucket
+      Events:
+        API:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /processimg
+            Method: get
+      Policies:
+        - Statement:
+          - Sid: GenPresignPermission
+            Effect: Allow
+            Action:
+              - s3:*
+            Resource: !Sub 'arn:aws:s3:::${IngestBucket}/*'
+        - Statement:
+          - Sid: GenPresignPermission
+            Effect: Allow
+            Action:
+              - s3:*
+            Resource: !Sub 'arn:aws:s3:::${ResultBucket}/*'
+
+  IngestBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 1
+
+  ResultBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 7
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  API:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  GenPresignLambda:
+    Description: "GenPresignLambda Function ARN"
+    Value: !GetAtt GenPresignLambda.Arn
+  ProcessImgLambda:
+    Description: "ProcessImgLambda Function ARN"
+    Value: !GetAtt ProcessImgLambda.Arn
+

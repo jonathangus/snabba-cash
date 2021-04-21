@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "batch-service"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-12ftuvw5dbt8h"
+s3_prefix = "batch-service"
+region = "eu-north-1"
+capabilities = "CAPABILITY_IAM"

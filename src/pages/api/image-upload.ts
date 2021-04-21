@@ -19,15 +19,15 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
     secretAccessKey: process.env.ACCESS_KEY,
   })
 
-  const name = uuidv4()
-
   let chunks: Uint8Array[] = []
   let ftype: string
   let fEncoding: string
+  let fname: string
 
   const busboy = new Busboy({ headers: req.headers })
-  busboy.on('file', (_fieldname, file, _filename, encoding, mimetype) => {
+  busboy.on('file', (_fieldname, file, filename, encoding, mimetype) => {
     ftype = mimetype
+    fname = filename.replace(/ /g, '_')
     fEncoding = encoding
     file.on('data', (data: any) => {
       chunks.push(data)
@@ -38,9 +38,10 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
     if (typeof process.env.IMAGE_BUCKET_NAME !== 'string') {
       return res.status(500).send({ status: 'error' })
     }
+
     const params = {
       Bucket: process.env.IMAGE_BUCKET_NAME,
-      Key: name,
+      Key: `${uuidv4()}-${fname}`,
       Body: Buffer.concat(chunks),
       ContentEncoding: fEncoding,
       ContentType: ftype,
@@ -50,6 +51,7 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
       if (err) {
         res.status(500).send({ err, status: 'error' })
       } else {
+        console.log(data)
         res.status(200).send({
           status: 'success',
           location: data.Location,

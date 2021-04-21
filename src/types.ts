@@ -3,4 +3,14 @@ export type ImageEntity = {
   uploaded: boolean
   id: string
   imageUrl?: string
+  crop: Crop
+}
+
+export type Crop = {
+  aspect: number
+  height: number
+  unit: 'px'
+  width: number
+  x: number
+  y: number
 }

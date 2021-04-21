@@ -11,7 +11,7 @@ const DropArea = styled.div<{ isDragActive: boolean }>`
 `
 
 const ONE_KB = 1000
-const maxFiles = parseInt(process.env.NEXT_PUBLIC_MAX_COUNT_UPLOAD || '') || 2
+const maxFiles = parseInt(process.env.NEXT_PUBLIC_MAX_COUNT_UPLOAD || '') || 10
 const maxSize =
   parseInt(process.env.NEXT_PUBLIC_MAX_SIZE_UPLOAD || '') || 700 * ONE_KB
 

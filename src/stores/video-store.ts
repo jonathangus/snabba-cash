@@ -1,5 +1,6 @@
 import create from 'zustand'
 import { generateVideo } from '../utiils/api'
+import toast from '../utiils/toast'
 import { useImageStore } from './image-store'
 
 type VideoStore = {
@@ -17,10 +18,16 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
     const { files } = useImageStore.getState()
     const result = await generateVideo(Object.values(files))
 
-    console.log({ result })
-    set(() => ({
-      videoUrl: result.data,
-      creating: false,
-    }))
+    if (result.success) {
+      set(() => ({
+        videoUrl: result.data,
+        creating: false,
+      }))
+    } else {
+      toast.error('Video could not be generated. Try again')
+      set(() => ({
+        creating: false,
+      }))
+    }
   },
 }))

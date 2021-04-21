@@ -2,6 +2,7 @@ import create from 'zustand'
 import { ImageEntity, Crop } from '../types'
 import toast from '../utiils/toast'
 import { uploadImage, generateVideo } from '../utiils/api'
+import { cropImage } from '../utiils/image-utils'
 
 type ImageStore = {
   files: Record<string, ImageEntity>
@@ -11,7 +12,7 @@ type ImageStore = {
 
 const defaultCrop = {
   aspect: 9 / 16,
-  width: 500,
+  width: 1080,
 }
 
 export const useImageStore = create<ImageStore>((set, get) => ({
@@ -30,6 +31,22 @@ export const useImageStore = create<ImageStore>((set, get) => ({
           },
         },
       }
+    })
+  },
+
+  uploadImages: async () => {
+    const { files } = get()
+    const images = await Promise.all(
+      Object.values(files).map(async (file, i) => {
+        return {
+          ...file,
+          fff: await cropImage(file.original, file.crop, 'hej'),
+        }
+      })
+    )
+
+    images.forEach((image) => {
+      uploadImage(image.fff)
     })
   },
 

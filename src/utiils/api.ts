@@ -27,6 +27,7 @@ export const uploadImage = async (file: File): Promise<ApiResponse> => {
         },
       }
     )
+    console.log(data.location)
     return {
       success: true,
       data: data.location,
@@ -45,11 +46,11 @@ export const generateVideo = async (
   const formData = new FormData()
 
   // console.log({ files })
-  // const images = await Promise.all(
-  //   files.map((file, i) => cropImage(file.original, file.crop, 'hej'))
-  // )
+  const images = await Promise.all(
+    files.map((file, i) => cropImage(file.original, file.crop, 'hej'))
+  )
 
-  // console.log({ images })
+  console.log({ images })
 
   // images.forEach((file) => {
   //   console.log(file)

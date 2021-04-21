@@ -25,7 +25,6 @@ const FileUploader = () => {
         'Images was not added because you reached the maximum amount of images'
       )
     }
-    acceptedFiles.forEach((file) => console.log(file.size))
     acceptedFiles.forEach(addFile)
   }, [])
 

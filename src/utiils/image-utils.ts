@@ -1,19 +1,30 @@
 import { Crop } from '../types'
 
+const getImageFromUrl = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image()
+    image.addEventListener('load', () => resolve(image))
+    image.addEventListener('error', reject)
+    image.src = url
+  })
+
 export const cropImage = async (file: File, crop: Crop, filename: string) => {
   const canvas = document.createElement('canvas')
 
-  var image = new Image()
-  image.height = 100
-  image.title = file.name
-  image.src = URL.createObjectURL(file)
+  var image = await getImageFromUrl(URL.createObjectURL(file))
 
-  const scaleX = image.naturalWidth / image.width
-  const scaleY = image.naturalHeight / image.height
+  // const scaleX = image.naturalWidth / image.width
+  const scaleX = 5.128205128205129
+  // const scaleY = image.naturalHeight / image.height
+  const scaleY = 5.12692307692307
   canvas.width = crop.width
   canvas.height = crop.height
 
-  console.log({ canvas })
+  console.log(image.naturalWidth, image.width, {
+    scaleX,
+    scaleY,
+  })
+  console.log(image, 'natu', image.naturalWidth, { crop })
   const ctx = canvas.getContext('2d')
 
   ctx.drawImage(

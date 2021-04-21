@@ -8,14 +8,31 @@
     "type-check": "tsc"
   },
   "dependencies": {
+    "@types/busboy": "^0.2.3",
+    "aws-sdk": "^2.889.0",
+    "axios": "^0.21.1",
+    "busboy": "^0.3.1",
+    "ffmpeg-static": "^4.3.0",
+    "ffprobe-static": "^3.0.0",
     "next": "latest",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-aws-s3": "^1.5.0",
+    "react-dom": "^17.0.1",
+    "react-dropzone": "^11.3.2",
+    "react-notifications-component": "^3.1.0",
+    "react-query": "^3.13.10",
+    "styled-components": "^5.2.3",
+    "uuid": "^8.3.2",
+    "videoshow": "^0.1.12",
+    "zustand": "^3.4.1"
   },
   "devDependencies": {
     "@types/node": "^12.12.21",
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
+    "@types/react-notifications-component": "^3.1.0",
+    "@types/styled-components": "^5.1.9",
+    "@types/uuid": "^8.3.0",
     "typescript": "4.0"
   },
   "license": "MIT"

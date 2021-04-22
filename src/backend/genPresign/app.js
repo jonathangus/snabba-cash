@@ -1,43 +1,42 @@
-const AWS = require('aws-sdk')
-let response
+const AWS = require("aws-sdk");
+let response;
 
-const s3 = new AWS.S3()
+const s3 = new AWS.S3();
 
-const myBucket = process.env.S3_BUCKET
-const signedUrlExpireSeconds = 60 * 10
+const myBucket = process.env.S3_BUCKET;
+const signedUrlExpireSeconds = 60 * 10;
 
 exports.lambdaHandler = async (event, context) => {
-  const body =
-    typeof event.body === 'string' ? JSON.parse(event.body) : event.body || {}
-  const myKey = body.zipName
+  const zipKey = event.pathParameters.images + ".zip";
 
-  console.log('----------------------MYKEY:', myKey)
+  console.log("----------------------MYKEY:", zipKey);
   const params = {
     Bucket: myBucket,
-    Key: myKey,
+    Key: zipKey,
     Expires: signedUrlExpireSeconds,
-    ContentType: 'application/zip',
-  }
+    ContentType: "application/zip",
+  };
+
+  response = {
+    statusCode: null,
+    body: null,
+    headers: {
+      "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+    },
+  };
 
   try {
-    const presigned = s3.getSignedUrl('putObject', params)
-
-    // const ret = await axios(url);
-    response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        presigned,
-      }),
-      headers: {
-        'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST',
-      },
-    }
+    const presigned = s3.getSignedUrl("putObject", params);
+    console.info(`Generated presigned for ${zipKey} successfully`);
+    response.statusCode = 200;
+    response.body = JSON.stringify({ presigned });
   } catch (err) {
-    console.log(err)
-    return err
-  }
+    console.error(err);
 
-  return response
-}
+    response.statusCode = 500;
+    response.body = JSON.stringify({ message: err });
+  }
+  return response;
+};

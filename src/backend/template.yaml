@@ -24,8 +24,8 @@ Resources:
         API:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /getpresign
-            Method: post
+            Path: /getpresign/{images}
+            Method: get
       Policies:
         - Statement:
             - Sid: GenPresignPermission
@@ -40,46 +40,51 @@ Resources:
       CodeUri: processImg/
       Handler: app.lambdaHandler
       Runtime: nodejs10.x
-      Timeout: 300
       MemorySize: 2048
       Environment:
         Variables:
-          S3_BUCKET_INGEST: !Ref IngestBucket
           S3_BUCKET_RESULT: !Ref ResultBucket
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: 
+              Ref: IngestBucket     # This must be the name of an S3 bucket declared in the same template file
+            Events: s3:ObjectCreated:*
+      Policies:
+        - Statement:
+            - Sid: PostVideoPermission
+              Effect: Allow
+              Action:
+                - s3:*
+              Resource: "*"
+
+  GetVideoLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: getVideo/
+      Handler: app.lambdaHandler
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref ResultBucket
       Events:
         API:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /processimg
-            Method: post
+            Path: /getvideo/{video}
+            Method: get
       Policies:
         - Statement:
             - Sid: GenPresignPermission
               Effect: Allow
               Action:
                 - s3:*
-              Resource: !Sub "arn:aws:s3:::${IngestBucket}/*"
-        - Statement:
-            - Sid: GenPresignPermission
-              Effect: Allow
-              Action:
-                - s3:*
-              Resource: !Sub "arn:aws:s3:::${ResultBucket}/*"
+              Resource: "*"
 
   IngestBucket:
     Type: AWS::S3::Bucket
     Properties:
-      CorsConfiguration:
-        CorsRules:
-          - AllowedOrigins:
-              - "*"
-            AllowedMethods:
-              - GET
-              - PUT
-              - POST
-
-            Id: myCORSRuleId1
-
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
@@ -103,6 +108,9 @@ Outputs:
   GenPresignLambda:
     Description: "GenPresignLambda Function ARN"
     Value: !GetAtt GenPresignLambda.Arn
+  GetVideoLambda:
+    Description: "GetVideoLambda Function ARN"
+    Value: !GetAtt GetVideoLambda.Arn
   ProcessImgLambda:
     Description: "ProcessImgLambda Function ARN"
     Value: !GetAtt ProcessImgLambda.Arn

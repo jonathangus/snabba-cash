@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "next -p 3001",
-    "build": "next build",
+    "build": "next build && next export",
     "start": "next start",
     "type-check": "tsc"
   },
   "dependencies": {
     "@types/busboy": "^0.2.3",
+    "@types/react-image-crop": "^8.1.2",
     "aws-sdk": "^2.889.0",
     "axios": "^0.21.1",
     "babel-plugin-styled-components": "^1.12.0",

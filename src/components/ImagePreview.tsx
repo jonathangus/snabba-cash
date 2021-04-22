@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import ReactCrop from 'react-image-crop'
 import { useEffect, useMemo } from 'react'
 import { Crop, ImageEntity } from '../types'

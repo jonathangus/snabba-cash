@@ -16,7 +16,7 @@ Resources:
     Properties:
       CodeUri: genPresign/
       Handler: app.lambdaHandler
-      Runtime: nodejs12.x
+      Runtime: nodejs10.x
       Environment:
         Variables:
           S3_BUCKET: !Ref IngestBucket
@@ -39,7 +39,8 @@ Resources:
     Properties:
       CodeUri: processImg/
       Handler: app.lambdaHandler
-      Runtime: nodejs12.x
+      Runtime: nodejs10.x
+      Timeout: 300
       Environment:
         Variables:
           S3_BUCKET_INGEST: !Ref IngestBucket

@@ -9,10 +9,11 @@ interface IApiService {
   getPresign: () => void
 }
 
+const id = 'f8bm92sxca'
+const apiUrl = `https://${id}.execute-api.eu-north-1.amazonaws.com/Prod`
+
 class ApiService implements IApiService {
-  base =
-    'https://f8bm92sxca.execute-api.eu-north-1.amazonaws.com/Prod' ||
-    process.env.NEXT_PUBLIC_API_ENDPOINT
+  base = apiUrl || process.env.NEXT_PUBLIC_API_ENDPOINT
   presigned?: string
 
   private getEndpoint = (endpoint: string): string => `${this.base}${endpoint}`
@@ -43,8 +44,20 @@ class ApiService implements IApiService {
       url = await this.getPresign()
     }
 
+    // Upload zip
     const data = await axios.put(url, content)
 
+    // Generate video
+    const videoResult = await axios.post(
+      this.getEndpoint('/processimg'),
+      JSON.stringify({
+        zipName: this.zipName,
+      })
+    )
+
+    console.log({
+      videoResult,
+    })
     console.log({ data })
   }
 }

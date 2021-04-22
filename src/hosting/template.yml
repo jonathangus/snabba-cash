@@ -1,0 +1,295 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31 # To use SAM for less verbose CF
+
+Description: 
+  Static web hosting with continuous deployment pipeline.
+
+Parameters: 
+  EnvironmentName:
+    Type: String
+    Default: cicd-stack
+    Description: "Environment prefixing resources, tagging resources and for importing resources from other stacks"
+
+  GithubOAuthToken:
+    Type: String
+    Description: "OAuth token for Github"
+
+  GithubBranchName:
+    Type: String
+    Description: "GitHub Branch name"
+
+  GithubRepoOwner:
+    Type: String
+    Description: "GitHub repo owner user-name. Must be owner"
+
+  GithubRepoName:
+    Type: String
+    Description: "GitHub repo name"
+
+  # GithubSecretName:
+  #   Type: String
+  #   Description: "Name of the secret in systems manager"
+
+  # GithubSecretNameKey:
+  #   Type: String
+  #   Description: "Key (in the secret's key-value pair) of the secret itself."
+
+  BuildSpecFilePath:
+    Description: Relative BuildSpec file path for build stage. For more information, see https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+    Type: String
+    Default: "buildspec.yml"
+
+Resources: 
+  ### STATIC HOSTING 
+
+  # Bucket to host static web assets
+  HostingBucket: 
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: Private
+      Tags:
+        - Key: project
+          Value: !Sub ${EnvironmentName}
+
+  # Identity to allow cloudFront to access our private bucket.
+  CloudFrontOriginAccessIdentity: 
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref HostingBucket
+
+  # Bucket policy that allows the aboe OAI to access the buvket.
+  HostingBucketPolicy: 
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref HostingBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource:
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref HostingBucket
+                  - '/*'
+            Principal: 
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
+                  - !Ref CloudFrontOriginAccessIdentity
+
+  # CDN to front and cache website
+  cloudfrontDistribution: 
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior: 
+          AllowedMethods: # Which methods to forward to S3
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods: # Which methods to cache responses for at cloudfront
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          DefaultTTL: 60 # in seconds
+          MaxTTL: 240 # in seconds
+          MinTTL: 60 # in seconds
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: false
+          TargetOriginId: s3origin # Unsure what this does, but required property
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        PriceClass: PriceClass_All
+        Origins:
+          - DomainName: !GetAtt HostingBucket.RegionalDomainName
+            Id: s3origin
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+        IPV6Enabled: false
+        ViewerCertificate: 
+          CloudFrontDefaultCertificate: true
+      Tags:
+        - Key: project
+          Value: !Sub ${EnvironmentName}
+
+  ### CD PIPELINE
+  # Bucket to host pipeline artifacts 
+  CodePipelineArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      Tags:
+        - Key: project
+          Value: !Ref EnvironmentName
+  
+  # Pipeline to orchestrate stages
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub ${EnvironmentName}-cd-pipeline-github
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref CodePipelineArtifactStoreBucket
+      Stages: 
+        - Name: Source
+          Actions:
+            - Name: GithubSourceAction
+              OutputArtifacts:
+                - Name: SourceOutput
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: '1'
+                Provider: GitHub
+              Configuration:
+                Owner: !Ref GithubRepoOwner
+                Repo: !Ref GithubRepoName
+                Branch: !Ref GithubBranchName
+                OAuthToken: !Ref GithubOAuthToken # This is written in plaintext in console. Better to use secrets manager: {{resolve:secretsmanager:MyGitHubSecret:SecretString:token}}
+                # OAuthToken: !Join 
+                #   - ''
+                #   - - '{{resolve:secretsmanager:'
+                #     - !Ref GithubSecretName
+                #     - ':SecretString:'
+                #     - !Ref GithubSecretNameKey
+                #     - '}}'
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 2
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              InputArtifacts:
+                - Name: BuildOutput
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: S3
+                Version: '1'
+              Configuration:
+                BucketName: !Ref HostingBucket
+                Extract: true
+              RunOrder: 3
+      Tags:
+        - Key: project
+          Value: !Ref EnvironmentName
+      RestartExecutionOnUpdate: true # Automatically run pipeline after it's been updated.
+
+  # Role used by CodePipeline
+  CodePipelineServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub ${EnvironmentName}-codepipeline-service-role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: # TODO: SCOPE DOWN!!!
+                  - codedeploy:*
+                  - codebuild:*
+                  - s3:*
+                Resource: '*'
+
+  # Build project to use in CodePipeline Build stage
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Ref BuildSpecFilePath
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL # SMALL | MEDIUM | LARGE
+        Image: 'aws/codebuild/standard:3.0'
+        Type: LINUX_CONTAINER
+        EnvironmentVariables: # Inject env variables into codeBuild (accessible as ${Name} in the buildspec.yml)
+          - Name: HOSTING_BUCKET
+            Value: !Ref HostingBucket
+      Tags:
+        - Key: project
+          Value: !Ref EnvironmentName
+
+  # Role used bu the build project
+  BuildProjectRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub ${EnvironmentName}-codebuild-service-role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: # TODO: SCOPE DOWN!!!
+                  - logs:*
+                  - s3:*
+                Resource: '*'
+
+  # Webhook to trigger pipeline
+  GitHubWebhook:
+    Type: 'AWS::CodePipeline::Webhook'
+    Properties:
+      AuthenticationConfiguration:
+        SecretToken: !Ref GithubOAuthToken
+        # SecretToken: !Join 
+        #   - ''
+        #   - - '{{resolve:secretsmanager:'
+        #     - !Ref GithubSecretName
+        #     - ':SecretString:'
+        #     - !Ref GithubSecretNameKey
+        #     - '}}'
+      Filters:
+        - JsonPath: "$.ref"
+          MatchEquals: refs/heads/{Branch}
+      Authentication: GITHUB_HMAC
+      TargetPipeline: !Ref CodePipeline
+      TargetAction: GithubSourceAction
+      TargetPipelineVersion: !GetAtt CodePipeline.Version
+      RegisterWithThirdParty: true
+
+Outputs:
+  CodePipelineArtifactStoreBucket:
+    Description: Bucket used for storing codepieline artifacts
+    Value: !Ref CodePipelineArtifactStoreBucket
+  Domain:
+    Description: Cloudfront Domain
+    Value: !GetAtt cloudfrontDistribution.DomainName

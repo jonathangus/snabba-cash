@@ -1,5 +1,7 @@
 import create from 'zustand'
+import apiService from '../services/api-service'
 import { generateVideo } from '../utiils/api'
+import { cropImage } from '../utiils/image-utils'
 import toast from '../utiils/toast'
 import { useImageStore } from './image-store'
 
@@ -16,18 +18,29 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
       creating: true,
     }))
     const { files } = useImageStore.getState()
-    const result = await generateVideo(Object.values(files))
 
-    if (result.success) {
-      set(() => ({
-        videoUrl: result.data,
-        creating: false,
-      }))
-    } else {
-      toast.error('Video could not be generated. Try again')
-      set(() => ({
-        creating: false,
-      }))
-    }
+    const images = await Promise.all(
+      Object.values(files).map(async (file, i) => {
+        return {
+          ...file,
+          fff: await cropImage(file.original, file.crop, 'hej'),
+        }
+      })
+    )
+    const videoUrl = apiService.create(images)
+
+    set(() => ({
+      videoUrl,
+      creating: false,
+    }))
+
+    // if (result.success) {
+
+    // } else {
+    //   toast.error('Video could not be generated. Try again')
+    //   set(() => ({
+    //     creating: false,
+    //   }))
+    // }
   },
 }))

@@ -41,6 +41,7 @@ Resources:
       Handler: app.lambdaHandler
       Runtime: nodejs10.x
       Timeout: 300
+      MemorySize: 2048
       Environment:
         Variables:
           S3_BUCKET_INGEST: !Ref IngestBucket

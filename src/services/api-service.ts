@@ -4,6 +4,8 @@ import JSZip from 'jszip'
 
 import { ImageEntity } from '../types'
 
+axios.defaults.timeout === 120000
+
 interface IApiService {
   presigned?: string
   getPresign: () => void
@@ -30,7 +32,7 @@ class ApiService implements IApiService {
     return this.presigned
   }
 
-  create = async (images: ImageEntity[]) => {
+  create = async (images: ImageEntity[]): Promise<string> => {
     const zip = new JSZip()
 
     images.forEach((image) => {
@@ -45,10 +47,10 @@ class ApiService implements IApiService {
     }
 
     // Upload zip
-    const data = await axios.put(url, content)
+    await axios.put(url, content)
 
     // Generate video
-    const videoResult = await axios.post(
+    const { data } = await axios.post(
       this.getEndpoint('/processimg'),
       JSON.stringify({
         zipName: this.zipName,
@@ -56,9 +58,10 @@ class ApiService implements IApiService {
     )
 
     console.log({
-      videoResult,
+      data,
     })
-    console.log({ data })
+
+    return data.url
   }
 }
 

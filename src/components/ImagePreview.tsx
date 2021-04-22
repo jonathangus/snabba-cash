@@ -61,14 +61,6 @@ const ImagePreview: React.FC<Props> = ({ image }) => {
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width
     const scaleY = imgRef.current.naturalHeight / imgRef.current.height
 
-    console.log(
-      {
-        scaleX,
-        scaleY,
-      },
-      imgRef.current.naturalWidth,
-      imgRef.current.width
-    )
     setCrop(image.id, newCrop)
   }
 

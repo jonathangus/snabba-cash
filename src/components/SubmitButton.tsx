@@ -17,9 +17,9 @@ const SubmitButton = () => {
       >
         Send
       </button>
-      <button onClick={uploadImages} disabled={Object.keys(files).length === 0}>
+      {/* <button onClick={uploadImages} disabled={Object.keys(files).length === 0}>
         Upload
-      </button>
+      </button> */}
     </div>
   )
 }

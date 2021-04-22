@@ -109,26 +109,40 @@ exports.lambdaHandler = async (event, context) => {
     const images = fs
       .readdirSync(outputFolder)
       .map((file) => path.join(outputFolder, file))
-    console.log({ images })
 
     const { filePath, fileName } = await generateVideo(images, outputFolder)
     const fileContent = fs.readFileSync(filePath)
 
+    console.log('Video bucket upload: ', resultBucket)
+    console.log('Video key upload: ', fileName)
+
     // Upload video to s3 and return the response
-    const result = await s3.upload({
+    const videoBucketParams = {
       Bucket: resultBucket,
       Key: fileName,
       Body: fileContent,
+    }
+    const result = await s3.upload(videoBucketParams).promise()
+
+    console.log('done deleting folder')
+
+    const url = s3.getSignedUrl('getObject', {
+      Bucket: resultBucket,
+      Key: fileName,
     })
 
-    console.log({ result })
-
+    if (fs.existsSync(outputFolder)) {
+      fs.rmdirSync(outputFolder, { recursive: true })
+    }
+    console.log('Signed URL::', url)
     return {
-      statusCode: 500,
-      body: JSON.stringify({
-        result,
-        myKey,
-      }),
+      statusCode: 200,
+      body: JSON.stringify({ result, url }),
+      headers: {
+        'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST',
+      },
     }
   } catch (error) {
     console.error(error)

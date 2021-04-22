@@ -1,10 +1,10 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   snabba-cash
 
   Sample SAM Template for snabba-cash
-  
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -25,14 +25,14 @@ Resources:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /getpresign
-            Method: get
+            Method: post
       Policies:
         - Statement:
-          - Sid: GenPresignPermission
-            Effect: Allow
-            Action:
-              - s3:*
-            Resource: !Sub 'arn:aws:s3:::${IngestBucket}/*'
+            - Sid: GenPresignPermission
+              Effect: Allow
+              Action:
+                - s3:*
+              Resource: !Sub "arn:aws:s3:::${IngestBucket}/*"
 
   ProcessImgLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -49,24 +49,35 @@ Resources:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /processimg
-            Method: get
+            Method: post
       Policies:
         - Statement:
-          - Sid: GenPresignPermission
-            Effect: Allow
-            Action:
-              - s3:*
-            Resource: !Sub 'arn:aws:s3:::${IngestBucket}/*'
+            - Sid: GenPresignPermission
+              Effect: Allow
+              Action:
+                - s3:*
+              Resource: !Sub "arn:aws:s3:::${IngestBucket}/*"
         - Statement:
-          - Sid: GenPresignPermission
-            Effect: Allow
-            Action:
-              - s3:*
-            Resource: !Sub 'arn:aws:s3:::${ResultBucket}/*'
+            - Sid: GenPresignPermission
+              Effect: Allow
+              Action:
+                - s3:*
+              Resource: !Sub "arn:aws:s3:::${ResultBucket}/*"
 
   IngestBucket:
     Type: AWS::S3::Bucket
     Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+
+            Id: myCORSRuleId1
+
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
@@ -93,4 +104,3 @@ Outputs:
   ProcessImgLambda:
     Description: "ProcessImgLambda Function ARN"
     Value: !GetAtt ProcessImgLambda.Arn
-

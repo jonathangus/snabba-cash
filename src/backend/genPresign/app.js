@@ -1,31 +1,26 @@
-const AWS = require("aws-sdk");
-let response;
+const AWS = require('aws-sdk')
+let response
 
-const s3 = new AWS.S3();
+const s3 = new AWS.S3()
 
-const myBucket = process.env.S3_BUCKET;
-const signedUrlExpireSeconds = 60 * 2;
+const myBucket = process.env.S3_BUCKET
+const signedUrlExpireSeconds = 60 * 10
 
 exports.lambdaHandler = async (event, context) => {
-  let prefix = event.body;
-  console.log("### Event:");
-  console.info(event);
+  const body =
+    typeof event.body === 'string' ? JSON.parse(event.body) : event.body || {}
+  const myKey = body.zipName
 
-  console.log("### Body:");
-  console.info(event.body);
-
-  const myKey = "images.zip";
-
+  console.log('----------------------MYKEY:', myKey)
   const params = {
     Bucket: myBucket,
     Key: myKey,
     Expires: signedUrlExpireSeconds,
-  };
+    ContentType: 'application/zip',
+  }
 
   try {
-    const presigned = s3.getSignedUrl("putObject", params);
-
-    console.log(presigned);
+    const presigned = s3.getSignedUrl('putObject', params)
 
     // const ret = await axios(url);
     response = {
@@ -33,11 +28,16 @@ exports.lambdaHandler = async (event, context) => {
       body: JSON.stringify({
         presigned,
       }),
-    };
+      headers: {
+        'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST',
+      },
+    }
   } catch (err) {
-    console.log(err);
-    return err;
+    console.log(err)
+    return err
   }
 
-  return response;
-};
+  return response
+}

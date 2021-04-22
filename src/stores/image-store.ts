@@ -3,6 +3,7 @@ import { ImageEntity, Crop } from '../types'
 import toast from '../utiils/toast'
 import { uploadImage, generateVideo } from '../utiils/api'
 import { cropImage } from '../utiils/image-utils'
+import apiService from '../services/api-service'
 
 type ImageStore = {
   files: Record<string, ImageEntity>
@@ -44,10 +45,7 @@ export const useImageStore = create<ImageStore>((set, get) => ({
         }
       })
     )
-
-    images.forEach((image) => {
-      uploadImage(image.fff)
-    })
+    apiService.create(images)
   },
 
   addFile: async (file: File) => {

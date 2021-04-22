@@ -2,7 +2,7 @@
   "name": "with-typescript",
   "version": "1.0.0",
   "scripts": {
-    "dev": "next",
+    "dev": "next -p 3001",
     "build": "next build",
     "start": "next start",
     "type-check": "tsc"
@@ -11,9 +11,12 @@
     "@types/busboy": "^0.2.3",
     "aws-sdk": "^2.889.0",
     "axios": "^0.21.1",
+    "babel-plugin-styled-components": "^1.12.0",
     "busboy": "^0.3.1",
     "ffmpeg-static": "^4.3.0",
     "ffprobe-static": "^3.0.0",
+    "form-data": "^4.0.0",
+    "jszip": "^3.6.0",
     "next": "latest",
     "react": "^17.0.1",
     "react-aws-s3": "^1.5.0",

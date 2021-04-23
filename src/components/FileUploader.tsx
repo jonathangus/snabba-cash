@@ -20,11 +20,13 @@ const getFilesFromEvent = async (
   )
 
   const promises = files.map(async (file) => {
-    const size = await getImageSizeFromFile(file)
+    if (file.type == 'image/png' || file.type === 'image/jpeg') {
+      const size = await getImageSizeFromFile(file)
 
-    Object.defineProperty(file, 'imageSize', {
-      value: size,
-    })
+      Object.defineProperty(file, 'imageSize', {
+        value: size,
+      })
+    }
 
     return file
   })
@@ -34,6 +36,10 @@ const getFilesFromEvent = async (
 
 const validator: DropzoneOptions['validator'] = (file: any) => {
   let message
+
+  if (!file.imageSize) {
+    return null
+  }
 
   switch (true) {
     case file.imageSize.width < config.fileConstraints.MIN_WIDTH:
@@ -56,6 +62,7 @@ const FileUploader = () => {
   const currentCount = useImageStore((state) => Object.keys(state.files).length)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    console.log(acceptedFiles)
     if (currentCount >= config.MAX_FILES) {
       return toast.error(
         'Images was not added because you reached the maximum amount of images'
@@ -68,13 +75,10 @@ const FileUploader = () => {
     fileRejections,
     event
   ) => {
-    console.log({
-      fileRejections,
-      event,
-    })
-
+    console.log(fileRejections)
     fileRejections.forEach((rejection) => {
       rejection.errors.forEach((error) => {
+        console.log(error.message)
         toast.error(`Reason: ${error.message}`, {
           title: 'One image failed to uploade',
         })
@@ -82,19 +86,28 @@ const FileUploader = () => {
     })
   }
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const {
+    getRootProps,
+    isDragReject,
+    getInputProps,
+    isDragActive,
+  } = useDropzone({
     onDrop,
     maxFiles: config.MAX_FILES,
     maxSize: config.MAX_FILE_SIZE,
     onDropRejected,
     validator,
     getFilesFromEvent,
+    accept: '.jpeg,.png',
   })
+
+  console.log({ isDragReject })
 
   return (
     <div>
       <DropArea {...getRootProps()} isDragActive={isDragActive}>
         <input {...getInputProps()} />
+        {isDragReject && <p>Some files will be rejected</p>}
         {isDragActive ? (
           <p>Drop the files here ...</p>
         ) : (

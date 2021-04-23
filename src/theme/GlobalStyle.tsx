@@ -12,7 +12,12 @@ const GlobalStyle = createGlobalStyle`
 
 
   .app-container {
-    min-height: 100vh;
+    position: relative;
+  }
+
+  .notifications-component  {
+    top:0;
+    left:0;
   }
 
   video, img {

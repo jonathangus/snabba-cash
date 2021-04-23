@@ -1,20 +1,15 @@
 import { useImageStore } from '../stores/image-store'
-import { useVideoStore } from '../stores/video-store'
+import { useUploadStore } from '../stores/upload-store'
+import Spacer from './Spacer'
 
 const SubmitButton = () => {
-  const { files, uploadImages } = useImageStore(({ files, uploadImages }) => ({
-    files,
-    uploadImages,
-  }))
-
-  const generateVideo = useVideoStore((state) => state.generateVideo)
+  const canUpload = useImageStore((store) => store.canUpload)
+  const generateVideo = useUploadStore((state) => state.generateVideo)
 
   return (
     <div>
-      <button
-        onClick={generateVideo}
-        disabled={Object.keys(files).length === 0}
-      >
+      <Spacer size={4} />
+      <button onClick={generateVideo} disabled={!canUpload}>
         Send
       </button>
       {/* <button onClick={uploadImages} disabled={Object.keys(files).length === 0}>

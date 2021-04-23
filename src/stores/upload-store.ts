@@ -1,38 +1,34 @@
 import create from 'zustand'
+import { UploadProgress } from '../enums'
 import apiService from '../services/api-service'
 import { useImageStore } from './image-store'
 
-type VideoStore = {
-  videoUrl?: string
-  creating: boolean
+type UploadStore = {
   generateVideo: () => Promise<void>
   fetchVideoFromId: (id: string) => Promise<void>
+  status: UploadProgress
+  progress: number
+  videoUrl?: string
 }
 
-export const useVideoStore = create<VideoStore>((set, get) => ({
-  creating: false,
+export const useUploadStore = create<UploadStore>((set) => ({
+  status: UploadProgress.NOT_STARTED,
+  progress: 0,
   generateVideo: async () => {
     set(() => ({
-      creating: true,
+      status: UploadProgress.COMPRESSING,
+      progress: 0,
     }))
+
     const { files } = useImageStore.getState()
-
     await apiService.create(files)
-
-    // if (result.success) {
-
-    // } else {
-    //   toast.error('Video could not be generated. Try again')
-    //   set(() => ({
-    //     creating: false,
-    //   }))
-    // }
   },
 
   fetchVideoFromId: async (id: string) => {
     apiService.setId(id)
     set(() => ({
-      creating: true,
+      status: UploadProgress.WAITING_RESPONSE,
+      progress: 0,
     }))
 
     await apiService.getVideoResult()

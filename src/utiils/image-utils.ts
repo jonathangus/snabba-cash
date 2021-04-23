@@ -6,7 +6,6 @@ export const getImageSizeFromFile = (
   new Promise((resolve) => {
     const fr = new FileReader()
 
-    console.log(file)
     fr.onload = () => {
       const img = new Image()
 

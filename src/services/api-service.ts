@@ -5,6 +5,8 @@ import JSZip from 'jszip'
 import { ImageEntity } from '../types'
 import { useVideoStore } from '../stores/video-store'
 import { addIdToUrl } from '../utiils/common-utils'
+import { useUploadStore } from '../stores/upload-store'
+import { UploadProgress } from '../enums'
 
 axios.defaults.timeout === 120000
 
@@ -64,9 +66,9 @@ class ApiService implements IApiService {
     const videoUrl = await this.pollVideo()
     if (videoUrl) {
       console.log('GOT IT', videoUrl)
-      useVideoStore.setState({
+      useUploadStore.setState({
         videoUrl,
-        creating: false,
+        status: UploadProgress.COMPLETE,
       })
     } else {
       setTimeout(() => {
@@ -75,32 +77,47 @@ class ApiService implements IApiService {
     }
   }
 
-  create = async (images: ImageEntity[]): Promise<string> => {
+  create = async (images: ImageEntity[]): Promise<void> => {
     const zip = new JSZip()
 
     images.forEach((image) => {
       zip.file(image.id, image.original, { base64: true })
     })
 
-    console.log('start compressing')
-    const content = await zip.generateAsync({ type: 'blob' })
-    console.log('done compressing')
+    console.time('Compressing zip')
+    const content = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+      useUploadStore.setState({ progress: metadata.percent })
+    })
+    console.timeEnd('Compressing zip')
+
     let url = this.presigned
     if (!url) {
       url = await this.getPresign()
     }
 
-    console.log(this.presigned)
-    // Upload zip
-    console.log('upload to s3')
-    await axios.put(url, content)
-    console.log('upload to s3 done')
+    useUploadStore.setState({ status: UploadProgress.UPLOAD, progress: 0 })
+
+    await axios.put(url, content, {
+      onUploadProgress: (progressEvent) => {
+        const percentage = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        )
+        useUploadStore.setState({ progress: percentage })
+      },
+    })
+
+    console.timeEnd('Upload to s3')
+
     addIdToUrl(this.zipName)
+
+    useUploadStore.setState({
+      status: UploadProgress.WAITING_RESPONSE,
+      progress: 0,
+    })
 
     setTimeout(() => {
       this.getVideoResult()
     }, 15000)
-    return ''
   }
 }
 

@@ -1,20 +1,16 @@
 import React, { useEffect } from 'react'
-import { useVideoStore } from '../stores/video-store'
-import FileUploader from './FileUploader'
-import Grid from './Grid'
-import ImagePreviews from './ImagePreviews'
-import SubmitButton from './SubmitButton'
-import TopArea from './TopArea'
+import { useUploadStore } from '../stores/upload-store'
+import Main from './Main'
 import VideoPreview from './VideoPreview'
 import { useRouter } from 'next/router'
+import { UploadProgress } from '../enums'
+import UploaderScreen from './UploaderScreen'
 
 const HomePage = () => {
   const { query } = useRouter()
-
-  const { creating, videoUrl, fetchVideoFromId } = useVideoStore(
-    ({ creating, videoUrl, fetchVideoFromId }) => ({
-      creating,
-      videoUrl,
+  const { status, fetchVideoFromId } = useUploadStore(
+    ({ fetchVideoFromId, status }) => ({
+      status,
       fetchVideoFromId,
     })
   )
@@ -25,32 +21,14 @@ const HomePage = () => {
     }
   }, [query.id])
 
-  if (creating) {
-    return (
-      <div>
-        <div>
-          <video
-            playsInline
-            autoPlay
-            src='https://media.giphy.com/media/3og0INAY5MLmEBubyU/giphy.mp4'
-          />
-        </div>
-        <h1>loading....</h1>
-      </div>
-    )
+  if (status === UploadProgress.NOT_STARTED) {
+    return <Main />
   }
 
-  if (videoUrl) {
-    return <VideoPreview url={videoUrl} />
+  if (status === UploadProgress.COMPLETE) {
+    return <VideoPreview />
   }
 
-  return (
-    <Grid>
-      <TopArea />
-      <FileUploader />
-      <ImagePreviews />
-      <SubmitButton />
-    </Grid>
-  )
+  return <UploaderScreen />
 }
 export default HomePage

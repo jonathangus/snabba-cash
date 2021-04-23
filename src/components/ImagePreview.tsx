@@ -1,75 +1,69 @@
 import * as React from 'react'
 import { useRef } from 'react'
 import { useCallback } from 'react'
-import ReactCrop from 'react-image-crop'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import styled from 'styled-components'
 import { Crop, ImageEntity } from '../types'
-import { useImageStore } from '../stores/image-store'
 
 type Props = {
-  image: ImageEntity
+  image?: ImageEntity
 }
 
-const ImagePreview: React.FC<Props> = ({ image }) => {
-  const previewUrl = useMemo(() => URL.createObjectURL(image.original), [
-    image.id,
-  ])
+const Placeholder = styled.div`
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
+const Image = styled.img<{ show: boolean }>`
+  transition: opacity 0.3s ease;
+  opacity: ${(props) => (props.show ? 1 : 0)};
+  position: relative;
+  z-index: 5;
+  object-fit: cover;
+  object-position: center;
+  height: 100%;
+  display: block;
+  width: 100%;
+`
 
-  const setCrop = useImageStore((state) => state.setCrop)
-  const imgRef = useRef()
+const Wrapper = styled.div`
+  height: 200px;
+  position: relative;
+`
+
+const ImagePreview: React.FC<Props> = ({ image }) => {
+  const [loaded, setLoaded] = useState(false)
+  const previewUrl = useMemo(
+    () => (image?.original ? URL.createObjectURL(image.original) : undefined),
+    [image?.id]
+  )
+
   useEffect(
     () => () => {
       // Make sure to revoke the data uris to avoid memory leaks
-      URL.revokeObjectURL(previewUrl)
+      previewUrl && URL.revokeObjectURL(previewUrl)
     },
-    [image.id]
+    [image?.id]
   )
 
   const onLoad = useCallback((img) => {
-    imgRef.current = img
-
-    return true // Return false if you set crop state in here.
+    console.log('loaded')
+    setLoaded(true)
   }, [])
 
-  // useEffect(() => {
-  //   const scaleX = imgRef.current.naturalWidth / imgRef.current.width
-  //   console.log(imgRef.current.naturalHeight / imgRef.current.height)
-  // }, [image.crop])
-
-  // // const [crop, setCrop] = useState({ aspect: 9 / 16 })
-
-  const updateCrop = (newCrop: Crop) => {
-    const scaleX = imgRef.current.naturalWidth / imgRef.current.width
-    const scaleY = imgRef.current.naturalHeight / imgRef.current.height
-
-    // console.log(
-    //   newCrop,
-    //   {
-    //     scaleX,
-    //     scaleY,
-    //   },
-    //   imgRef.current.naturalWidth,
-    //   imgRef.current.width
-    // )
-    // setCrop(image.id, { ...newCrop, scaleX, scaleY })
-    setCrop(newCrop)
-  }
-
   return (
-    <ReactCrop
-      ref={imgRef}
-      src={previewUrl}
-      crop={image.crop}
-      onImageLoaded={onLoad}
-      onChange={updateCrop}
-    />
-  )
-
-  return (
-    <div>
-      <img src={previewUrl} />
-      {!image.uploaded && 'laddar upp...'}
-    </div>
+    <Wrapper>
+      {previewUrl && <Image show={loaded} onLoad={onLoad} src={previewUrl} />}
+      <Placeholder>
+        <span>Upload image</span>
+      </Placeholder>
+    </Wrapper>
   )
 }
 

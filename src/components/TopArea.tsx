@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import Image from 'next/image'
 import Spacer from './Spacer'
 
 const Container = styled.div`
@@ -7,6 +6,8 @@ const Container = styled.div`
   align-items: center;
   flex-direction: column;
 `
+
+const Image = styled.img``
 
 const ImageWrapper = styled.div`
   position: relative;

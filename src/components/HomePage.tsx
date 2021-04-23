@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 
 const HomePage = () => {
   const { query } = useRouter()
-  console.log(query)
+
   const { creating, videoUrl, fetchVideoFromId } = useVideoStore(
     ({ creating, videoUrl, fetchVideoFromId }) => ({
       creating,

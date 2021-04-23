@@ -9,6 +9,10 @@ import ImagePreview from './ImagePreview'
 const Container = styled.div`
   display: grid;
   gap: ${(props) => props.theme.gutter}px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `
 
 const Item = styled.div``
@@ -21,7 +25,6 @@ const ImagePreviews: React.FC = () => {
     ? Array(config.MIN_FILES).fill(0)
     : files
 
-  console.log({ items })
   return (
     <Container>
       {items.map((item, index) => (

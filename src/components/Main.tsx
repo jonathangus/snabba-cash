@@ -11,10 +11,20 @@ const Container = styled.div`
 `
 const Wrapper = styled.div`
   display: flex;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+  }
 `
 
 const Sidebar = styled.div`
   width: 300px;
+
+  @media (max-width: 500px) {
+    width: auto;
+    order: 2;
+    padding: ${(props) => props.theme.gutter * 2}px;
+  }
 `
 
 const Sticky = styled.div`

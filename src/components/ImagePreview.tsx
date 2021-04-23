@@ -35,6 +35,10 @@ const Image = styled.img<{ show: boolean }>`
 const Wrapper = styled.div`
   height: 200px;
   position: relative;
+
+  @media (max-width: 500px) {
+    height: 120px;
+  }
 `
 
 const ImagePreview: React.FC<Props> = ({ image }) => {

@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components'
+import { UploadProgress } from '../enums'
 import { useUploadStore } from '../stores/upload-store'
 import Spacer from './Spacer'
 
@@ -28,7 +29,7 @@ const LoadBox = styled.div`
 `
 
 const Boom = styled.div`
-  backround: white;
+  background-color: white;
   padding: 10px;
 `
 
@@ -44,14 +45,26 @@ const UploaderScreen = () => {
     progress: store.progress,
   }))
 
+  let node = (
+    <div>
+      {status} - {progress}%
+    </div>
+  )
+
+  if (status === UploadProgress.WAITING_RESPONSE) {
+    node = (
+      <div>
+        Waiting for creation of video. This can take a couple of minutes.
+      </div>
+    )
+  }
+
   return (
     <Container>
       <Spacer size={2} />
       <LoadBox />
 
-      <Boom>
-        {status} - {progress}%
-      </Boom>
+      <Boom>{node}</Boom>
 
       <Spacer size={2} />
     </Container>

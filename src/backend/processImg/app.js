@@ -3,12 +3,9 @@ const path = require('path')
 const fs = require('fs')
 const unzipper = require('unzipper')
 const videoshow = require('videoshow')
-const { v4 } = require('uuid')
+const sharp = require('/opt/node_modules/sharp')
 
 videoshow.ffmpeg.setFfmpegPath('/opt/bin/ffmpeg')
-// videoshow.ffmpeg.setFfprobePath(ffprobePath.path)
-
-let response
 
 const audio = path.join(__dirname + '/audio.mp3')
 const logo = path.join(__dirname + '/etablera.png')
@@ -39,8 +36,8 @@ const generateVideo = (images, outDir, name) => {
     videoshow(finalImages, videoOptions)
       .audio(audio)
       .logo(logo, {
-        xAxis: 0,
-        yAxis: 100,
+        xAxis: 20,
+        yAxis: 20,
       })
       .complexFilter('lut3d=fade.cube')
       .save(output)
@@ -101,6 +98,20 @@ exports.lambdaHandler = async (event, context) => {
     const images = fs
       .readdirSync(outputFolder)
       .map((file) => path.join(outputFolder, file))
+
+    const transformPromises = images.map(async (path) => {
+      const buffer = await sharp(path)
+        .resize({
+          width: 1080,
+          height: 1920,
+          kernel: sharp.kernel.nearest,
+          fit: 'cover',
+        })
+        .toBuffer()
+      fs.writeFileSync(path, buffer)
+    })
+
+    await Promise.all(transformPromises)
 
     console.log('----images', images)
     const { filePath, fileName } = await generateVideo(

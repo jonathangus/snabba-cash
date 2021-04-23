@@ -1,14 +1,12 @@
 import create from 'zustand'
 import apiService from '../services/api-service'
-import { generateVideo } from '../utiils/api'
-import { cropImage } from '../utiils/image-utils'
-import toast from '../utiils/toast'
 import { useImageStore } from './image-store'
 
 type VideoStore = {
   videoUrl?: string
   creating: boolean
   generateVideo: () => Promise<void>
+  fetchVideoFromId: (id: string) => Promise<void>
 }
 
 export const useVideoStore = create<VideoStore>((set, get) => ({
@@ -19,15 +17,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
     }))
     const { files } = useImageStore.getState()
 
-    const images = await Promise.all(
-      Object.values(files).map(async (file, i) => {
-        return {
-          ...file,
-          fff: await cropImage(file.original, file.crop, 'hej'),
-        }
-      })
-    )
-    await apiService.create(images)
+    await apiService.create(files)
 
     // if (result.success) {
 
@@ -37,5 +27,14 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
     //     creating: false,
     //   }))
     // }
+  },
+
+  fetchVideoFromId: async (id: string) => {
+    apiService.setId(id)
+    set(() => ({
+      creating: true,
+    }))
+
+    await apiService.getVideoResult()
   },
 }))

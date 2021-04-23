@@ -31,19 +31,6 @@ export const useImageStore = create<ImageStore>((set, get) => ({
     }))
   },
 
-  uploadImages: async () => {
-    const { files } = get()
-    const images = await Promise.all(
-      Object.values(files).map(async (file, i) => {
-        return {
-          ...file,
-          fff: await cropImage(file.original, file.crop, 'hej'),
-        }
-      })
-    )
-    apiService.create(images)
-  },
-
   addFile: async (file: File) => {
     const newEntity = {
       uploaded: false,

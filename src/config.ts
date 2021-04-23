@@ -3,9 +3,9 @@ const ONE_KB = 1000
 const getIntFromEnv = (key: string, defatulValue: number): number =>
   parseInt(process.env[key] || '') || defatulValue
 
-const maxFiles = getIntFromEnv('NEXT_PUBLIC_MAX_COUNT_UPLOAD', 10)
+const maxFiles = getIntFromEnv('NEXT_PUBLIC_MAX_COUNT_UPLOAD', 30)
 const minFiles = getIntFromEnv('NEXT_PUBLIC_MAX_COUNT_UPLOAD', 5)
-const maxSize = getIntFromEnv('NEXT_PUBLIC_MAX_SIZE_UPLOAD', 700 * ONE_KB)
+const maxSize = getIntFromEnv('NEXT_PUBLIC_MAX_SIZE_UPLOAD', 5000 * ONE_KB)
 
 const config = {
   MAX_FILES: maxFiles,

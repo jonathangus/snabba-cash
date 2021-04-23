@@ -4,12 +4,14 @@ import JSZip from 'jszip'
 
 import { ImageEntity } from '../types'
 import { useVideoStore } from '../stores/video-store'
+import { addIdToUrl } from '../utiils/common-utils'
 
 axios.defaults.timeout === 120000
 
 interface IApiService {
   presigned?: string
   getPresign: () => void
+  setId: (id: string) => void
 }
 
 const id = 'f8bm92sxca'
@@ -22,6 +24,10 @@ class ApiService implements IApiService {
   private getEndpoint = (endpoint: string, key: string): string =>
     `${this.base}${endpoint}/${key}`
   private zipName = `${uuidv4()}`
+
+  setId = (id: string) => {
+    this.zipName = id
+  }
 
   getPresign = async (): Promise<string> => {
     const { data } = await axios.get<{ presigned: string }>(
@@ -73,11 +79,12 @@ class ApiService implements IApiService {
     const zip = new JSZip()
 
     images.forEach((image) => {
-      zip.file(image.id, image.fff, { base64: true })
+      zip.file(image.id, image.original, { base64: true })
     })
 
+    console.log('start compressing')
     const content = await zip.generateAsync({ type: 'blob' })
-
+    console.log('done compressing')
     let url = this.presigned
     if (!url) {
       url = await this.getPresign()
@@ -88,10 +95,11 @@ class ApiService implements IApiService {
     console.log('upload to s3')
     await axios.put(url, content)
     console.log('upload to s3 done')
+    addIdToUrl(this.zipName)
 
     setTimeout(() => {
       this.getVideoResult()
-    }, 5000)
+    }, 15000)
     return ''
   }
 }

@@ -30,6 +30,7 @@ const HomePage = () => {
       <div>
         <div>
           <video
+            playsInline
             autoPlay
             src='https://media.giphy.com/media/3og0INAY5MLmEBubyU/giphy.mp4'
           />

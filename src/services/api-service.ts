@@ -65,7 +65,7 @@ class ApiService implements IApiService {
     } else {
       setTimeout(() => {
         this.getVideoResult()
-      }, 1500)
+      }, 5000)
     }
   }
 
@@ -89,7 +89,9 @@ class ApiService implements IApiService {
     await axios.put(url, content)
     console.log('upload to s3 done')
 
-    this.getVideoResult()
+    setTimeout(() => {
+      this.getVideoResult()
+    }, 5000)
     return ''
   }
 }

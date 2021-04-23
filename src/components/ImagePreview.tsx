@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useRef } from 'react'
 import { useCallback } from 'react'
 import ReactCrop from 'react-image-crop'
 import { useEffect, useMemo } from 'react'
@@ -8,13 +9,14 @@ import { useImageStore } from '../stores/image-store'
 type Props = {
   image: ImageEntity
 }
+
 const ImagePreview: React.FC<Props> = ({ image }) => {
   const previewUrl = useMemo(() => URL.createObjectURL(image.original), [
     image.id,
   ])
 
   const setCrop = useImageStore((state) => state.setCrop)
-  const imgRef = React.useRef()
+  const imgRef = useRef()
   useEffect(
     () => () => {
       // Make sure to revoke the data uris to avoid memory leaks
@@ -25,27 +27,6 @@ const ImagePreview: React.FC<Props> = ({ image }) => {
 
   const onLoad = useCallback((img) => {
     imgRef.current = img
-
-    // const aspect = 9 / 16
-    // const width =
-    //   img.width / aspect < img.height * aspect
-    //     ? 100
-    //     : ((img.height * aspect) / img.width) * 100
-    // const height =
-    //   img.width / aspect > img.height * aspect
-    //     ? 100
-    //     : (img.width / aspect / img.height) * 100
-    // const y = (100 - height) / 2
-    // const x = (100 - width) / 2
-    // console.log({ unit: '%', width, height, x, y, aspect })
-    // setCrop(image.id, {
-    //   unit: '%',
-    //   width,
-    //   height,
-    //   x,
-    //   y,
-    //   aspect,
-    // })
 
     return true // Return false if you set crop state in here.
   }, [])
@@ -61,7 +42,17 @@ const ImagePreview: React.FC<Props> = ({ image }) => {
     const scaleX = imgRef.current.naturalWidth / imgRef.current.width
     const scaleY = imgRef.current.naturalHeight / imgRef.current.height
 
-    setCrop(image.id, newCrop)
+    // console.log(
+    //   newCrop,
+    //   {
+    //     scaleX,
+    //     scaleY,
+    //   },
+    //   imgRef.current.naturalWidth,
+    //   imgRef.current.width
+    // )
+    // setCrop(image.id, { ...newCrop, scaleX, scaleY })
+    setCrop(newCrop)
   }
 
   return (

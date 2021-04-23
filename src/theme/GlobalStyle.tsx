@@ -6,6 +6,10 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
   }
 
+  body {
+    background: ${(props) => props.theme.backgroundColor}
+  }
+
 
   .app-container {
     min-height: 100vh;

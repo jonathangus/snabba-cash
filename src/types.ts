@@ -9,7 +9,7 @@ export type ImageEntity = {
 export type Crop = {
   aspect: number
   height: number
-  unit: 'px'
+  unit: '%'
   width: number
   x: number
   y: number

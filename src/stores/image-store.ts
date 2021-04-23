@@ -1,38 +1,34 @@
 import create from 'zustand'
 import { ImageEntity, Crop } from '../types'
-import toast from '../utiils/toast'
-import { uploadImage, generateVideo } from '../utiils/api'
 import { cropImage } from '../utiils/image-utils'
 import apiService from '../services/api-service'
 
 type ImageStore = {
-  files: Record<string, ImageEntity>
+  files: ImageEntity[]
   addFile: (file: File) => void
   setCrop: (fileId: string, crop: Crop) => void
 }
 
-const defaultCrop = {
+const defaultCrop: Crop = {
   aspect: 9 / 16,
-  width: 1080,
+  unit: '%',
+  height: 100,
 }
 
 export const useImageStore = create<ImageStore>((set, get) => ({
-  files: {},
+  files: [],
 
   setCrop: (fileId, crop) => {
-    set((state) => {
-      const entity = state.files[fileId]
-
-      return {
-        files: {
-          ...state.files,
-          [entity.id]: {
-            ...entity,
-            crop,
-          },
-        },
-      }
-    })
+    set((state) => ({
+      files: state.files.map((file) =>
+        file.id !== fileId
+          ? file
+          : {
+              ...file,
+              crop,
+            }
+      ),
+    }))
   },
 
   uploadImages: async () => {
@@ -57,34 +53,10 @@ export const useImageStore = create<ImageStore>((set, get) => ({
     }
 
     set((state) => ({
-      files: {
-        ...state.files,
-        [newEntity.id]: newEntity,
-      },
+      files: [
+        ...state.files.filter((file) => file.id !== newEntity.id),
+        newEntity,
+      ],
     }))
-
-    // const response = await uploadImage(newEntity.original)
-
-    // if (response.success) {
-    //   set((state) => ({
-    //     files: {
-    //       ...state.files,
-    //       [newEntity.id]: {
-    //         ...state.files[newEntity.id],
-    //         uploaded: true,
-    //         imageUrl: response.imageUrl,
-    //       },
-    //     },
-    //   }))
-    // } else {
-    //   console.error(response.error)
-    //   set((state) => {
-    //     toast.error('Could not upload image. Try again')
-    //     const { [newEntity.id]: remove, ...files } = state.files
-    //     return {
-    //       files,
-    //     }
-    //   })
-    // }
   },
 }))

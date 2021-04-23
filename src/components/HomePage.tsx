@@ -1,8 +1,10 @@
 import React from 'react'
 import { useVideoStore } from '../stores/video-store'
 import FileUploader from './FileUploader'
+import Grid from './Grid'
 import ImagePreviews from './ImagePreviews'
 import SubmitButton from './SubmitButton'
+import TopArea from './TopArea'
 import VideoPreview from './VideoPreview'
 
 const HomePage = () => {
@@ -20,11 +22,12 @@ const HomePage = () => {
   }
 
   return (
-    <div>
+    <Grid>
+      <TopArea />
       <FileUploader />
       <ImagePreviews />
       <SubmitButton />
-    </div>
+    </Grid>
   )
 }
 export default HomePage

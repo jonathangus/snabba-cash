@@ -19,8 +19,8 @@ const App: React.FC<Props> = ({ Component, pageProps }) => {
 
   return (
     <>
-      <GlobalStyle />
       <ThemeProvider>
+        <GlobalStyle />
         <div className='app-container'>
           <Component {...pageProps} />
           <ReactNotification />

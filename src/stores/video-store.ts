@@ -27,12 +27,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
         }
       })
     )
-    const videoUrl = apiService.create(images)
-
-    set(() => ({
-      videoUrl,
-      creating: false,
-    }))
+    await apiService.create(images)
 
     // if (result.success) {
 

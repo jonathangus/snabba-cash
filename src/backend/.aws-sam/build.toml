@@ -15,4 +15,11 @@ source_md5 = ""
 packagetype = "Zip"
 functions = ["ProcessImgLambda"]
 
+[function_build_definitions.778deae3-4a4d-4fe9-9acf-e0059b67e1a3]
+codeuri = "/Users/jontis/projects/snabba-cash/src/backend/getVideo"
+runtime = "nodejs10.x"
+source_md5 = ""
+packagetype = "Zip"
+functions = ["GetVideoLambda"]
+
 [layer_build_definitions]

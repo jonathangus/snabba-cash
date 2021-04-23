@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import JSZip from 'jszip'
 
 import { ImageEntity } from '../types'
+import { useVideoStore } from '../stores/video-store'
 
 axios.defaults.timeout === 120000
 
@@ -18,18 +19,54 @@ class ApiService implements IApiService {
   base = apiUrl || process.env.NEXT_PUBLIC_API_ENDPOINT
   presigned?: string
 
-  private getEndpoint = (endpoint: string): string => `${this.base}${endpoint}`
-  private zipName = `zip-${uuidv4()}.zip`
+  private getEndpoint = (endpoint: string, key: string): string =>
+    `${this.base}${endpoint}/${key}`
+  private zipName = `${uuidv4()}`
 
   getPresign = async (): Promise<string> => {
-    const { data } = await axios.post<{ presigned: string }>(
-      this.getEndpoint('/getpresign'),
-      JSON.stringify({
-        zipName: this.zipName,
-      })
+    const { data } = await axios.get<{ presigned: string }>(
+      this.getEndpoint('/getpresign', this.zipName)
     )
+    console.log(
+      'presign get endoint',
+      this.getEndpoint('/getpresign', this.zipName)
+    )
+    console.log('zip', this.zipName)
+    console.log('presign result: ', data.presigned)
     this.presigned = data.presigned
     return this.presigned
+  }
+
+  pollVideo = async () => {
+    try {
+      const { data } = await axios.get<{ presigned: string }>(
+        this.getEndpoint('/getvideo', this.zipName)
+      )
+
+      console.log({ data })
+      if (data.presigned) {
+        return data.presigned
+      }
+    } catch (e) {
+      console.error('----e', e)
+    }
+  }
+
+  getVideoResult = async () => {
+    console.log('polling....')
+
+    const videoUrl = await this.pollVideo()
+    if (videoUrl) {
+      console.log('GOT IT', videoUrl)
+      useVideoStore.setState({
+        videoUrl,
+        creating: false,
+      })
+    } else {
+      setTimeout(() => {
+        this.getVideoResult()
+      }, 1500)
+    }
   }
 
   create = async (images: ImageEntity[]): Promise<string> => {
@@ -46,22 +83,14 @@ class ApiService implements IApiService {
       url = await this.getPresign()
     }
 
+    console.log(this.presigned)
     // Upload zip
+    console.log('upload to s3')
     await axios.put(url, content)
+    console.log('upload to s3 done')
 
-    // Generate video
-    const { data } = await axios.post(
-      this.getEndpoint('/processimg'),
-      JSON.stringify({
-        zipName: this.zipName,
-      })
-    )
-
-    console.log({
-      data,
-    })
-
-    return data.url
+    this.getVideoResult()
+    return ''
   }
 }
 

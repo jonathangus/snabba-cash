@@ -10,7 +10,8 @@ const GlobalStyle = createGlobalStyle`
   .app-container {
     min-height: 100vh;
   }
-  img {
+
+  video, img {
     max-width:100%;
   }
 `

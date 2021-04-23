@@ -20,11 +20,6 @@ export const cropImage = async (file: File, crop: Crop, filename: string) => {
   canvas.width = crop.width
   canvas.height = crop.height
 
-  console.log(image.naturalWidth, image.width, {
-    scaleX,
-    scaleY,
-  })
-  console.log(image, 'natu', image.naturalWidth, { crop })
   const ctx = canvas.getContext('2d')
 
   ctx.drawImage(
@@ -53,8 +48,6 @@ export const cropImage = async (file: File, crop: Crop, filename: string) => {
       1
     )
   })
-
-  console.log({ bl })
 
   return bl
 }

@@ -7,6 +7,7 @@ import { useVideoStore } from '../stores/video-store'
 import { addIdToUrl } from '../utiils/common-utils'
 import { useUploadStore } from '../stores/upload-store'
 import { UploadProgress } from '../enums'
+import toast from '../utiils/toast'
 
 axios.defaults.timeout === 120000
 
@@ -60,7 +61,7 @@ class ApiService implements IApiService {
     }
   }
 
-  getVideoResult = async () => {
+  getVideoResult = async (tries = 0) => {
     console.log('polling....')
 
     const videoUrl = await this.pollVideo()
@@ -70,10 +71,12 @@ class ApiService implements IApiService {
         videoUrl,
         status: UploadProgress.COMPLETE,
       })
+    } else if (tries > 30) {
+      toast.error('Failed loading video. Try again')
     } else {
       setTimeout(() => {
-        this.getVideoResult()
-      }, 5000)
+        this.getVideoResult(tries++)
+      }, 10000)
     }
   }
 

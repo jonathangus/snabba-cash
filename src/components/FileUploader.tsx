@@ -20,7 +20,12 @@ const getFilesFromEvent = async (
   )
 
   const promises = files.map(async (file) => {
-    if (file.type == 'image/png' || file.type === 'image/jpeg') {
+    console.log(file.type)
+    if (
+      file.type == 'image/png' ||
+      file.type === 'image/jpeg' ||
+      file.type === 'image/jpg'
+    ) {
       const size = await getImageSizeFromFile(file)
 
       Object.defineProperty(file, 'imageSize', {
@@ -98,7 +103,7 @@ const FileUploader = () => {
     onDropRejected,
     validator,
     getFilesFromEvent,
-    accept: '.jpeg,.png',
+    accept: '.jpeg,.jpg,.png',
   })
 
   console.log({ isDragReject })

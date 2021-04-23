@@ -98,7 +98,11 @@ const FileUploader = () => {
         {isDragActive ? (
           <p>Drop the files here ...</p>
         ) : (
-          <p>Drag 'n' drop some files here, or click to select files</p>
+          <p>
+            Drag 'n' drop some files here, or click to select files. You need to
+            upload a minumum of {config.MIN_FILES} and max {config.MAX_FILES}.
+            Uploading many will make it go sloooow.
+          </p>
         )}
       </DropArea>
     </div>

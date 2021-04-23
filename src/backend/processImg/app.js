@@ -212,13 +212,13 @@ exports.lambdaHandler = async (event, context) => {
       path: path.join(outputFolder, file),
     }))
 
-    const transformPromises = images.map(async (path) => {
+    const transformPromises = images.map(async ({ path }) => {
       const buffer = await sharp(path)
         .resize({
           width: 1080,
           height: 1920,
-          position: sharp.strategy.attention,
           fit: 'cover',
+          position: sharp.strategy.attention,
         })
         .toBuffer()
       fs.writeFileSync(path, buffer)
@@ -258,7 +258,8 @@ exports.lambdaHandler = async (event, context) => {
             IMAGE_HEIGHT - IMAGE_HEIGHT * (item.upScale - 1)
           )
           const top = IMAGE_HEIGHT - fullHeight
-
+          console.log('CROPPED FILE: ', newPath)
+          console.log('FILE EXIST: ', fs.existsSync(newPath))
           const buffer = await sharp(newPath)
             .extract({
               width: fullWidth,
